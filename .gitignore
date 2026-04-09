@@ -6,7 +6,7 @@ googles.env
 # ── Dữ liệu tự sinh (không commit) ───────────────────────────────
 data.json
 src/data.json
-data/                    # ChromaDB persistent storage
+data/
 src/chatbot/tools/data/
 
 # ── Python ────────────────────────────────────────────────────────
