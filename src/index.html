@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>TOÀN CẢNH VIỆT NAM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+<style>
+:root {
+    --primary-red: #d32f2f;
+    --border: 1px solid rgba(0,0,0,0.15);
+    --bg: #f7f8ff;
+    --radius: 8px;
+    --glass-bg: rgba(255,255,255,0.10);
+    --glass-bg-strong: rgba(255,255,255,0.14);
+    --glass-border: rgba(255,255,255,0.34);
+    --glass-shadow: 0 34px 90px rgba(17,24,39,0.16);
+    --glass-shadow-soft: 0 20px 56px rgba(17,24,39,0.12);
+    --glass-inset: inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 0 rgba(255,255,255,0.08);
+    --glass-text: #0b1220;
+    --glass-text-muted: rgba(17,24,39,0.70);
+}
+
+.glass-3d {
+    position: relative;
+    backdrop-filter: blur(22px) saturate(210%);
+    -webkit-backdrop-filter: blur(22px) saturate(210%);
+}
+.glass-3d::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+        radial-gradient(700px 220px at 18% 0%, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 60%),
+        radial-gradient(620px 220px at 82% 0%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 60%),
+        linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.05) 45%, rgba(255,255,255,0.00) 100%);
+    mix-blend-mode: normal;
+}
+.glass-3d::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.55),
+        inset 0 -18px 26px rgba(17,24,39,0.06);
+}
+html {
+    height: 100%;
+    background:
+        radial-gradient(1100px 520px at 10% 0%, rgba(56,189,248,0.40) 0%, rgba(56,189,248,0.16) 38%, rgba(0,0,0,0) 76%),
+        radial-gradient(980px 520px at 95% 6%, rgba(244,114,182,0.32) 0%, rgba(244,114,182,0.12) 40%, rgba(0,0,0,0) 78%),
+        radial-gradient(1000px 520px at 55% 96%, rgba(167,139,250,0.34) 0%, rgba(167,139,250,0.14) 44%, rgba(0,0,0,0) 80%),
+        radial-gradient(900px 460px at 30% 70%, rgba(52,211,153,0.26) 0%, rgba(52,211,153,0.10) 42%, rgba(0,0,0,0) 78%),
+        linear-gradient(180deg, #ffffff 0%, var(--bg) 45%, #ffffff 100%);
+    background-attachment: fixed;
+}
+body {
+    margin: 0;
+    font-family: system-ui, sans-serif;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    box-sizing: border-box;
+    padding: 10px;
+    gap: 10px;
+}
+#scroll-body {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 0;
+    padding-bottom: 10px;
+}
+#scroll-body > * {
+    flex-shrink: 0;
+}
+
+#re-wrapper {
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 16px;
+    background: var(--glass-bg-strong);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: var(--glass-shadow-soft), var(--glass-inset);
+}
+.re-header-row {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.re-section-title {
+    font-size: 15px; font-weight: 700; letter-spacing: 0.06em;
+    color: var(--glass-text);
+}
+.re-stats-text {
+    font-size: 12px; color: var(--glass-text-muted);
+}
+.re-filter-row {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+}
+.re-select {
+    padding: 5px 10px; border-radius: 6px; font-size: 12px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.55); cursor: pointer;
+    color: var(--glass-text);
+}
+.re-search {
+    padding: 5px 12px; border-radius: 6px; font-size: 12px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.55);
+    color: var(--glass-text); flex: 1; min-width: 180px; max-width: 320px;
+    outline: none;
+}
+.re-search:focus { border-color: #3b82f6; }
+.re-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+}
+.re-card {
+    display: flex; flex-direction: column;
+    background: rgba(255,255,255,0.72);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px; overflow: hidden;
+    text-decoration: none; color: inherit;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    cursor: pointer;
+}
+.re-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.13);
+}
+.re-card-img-wrap { position: relative; height: 150px; background: #f0f0f0; overflow: hidden; }
+.re-card-img {
+    width: 100%; height: 100%; object-fit: cover;
+    display: block;
+}
+.re-no-img {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px; background: #f5f5f5;
+}
+.re-tag {
+    position: absolute; padding: 2px 7px; border-radius: 4px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+}
+.re-tag-type { top: 6px; left: 6px; background: #ef4444; color: #fff; }
+.re-tag-cat  { top: 6px; right: 6px; background: rgba(0,0,0,0.55); color: #fff; }
+.re-card-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.re-card-title {
+    font-size: 12px; font-weight: 600; line-height: 1.4;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden; color: var(--glass-text);
+}
+.re-card-price {
+    font-size: 14px; font-weight: 700; color: #e53e3e;
+}
+.re-pm2 { font-size: 11px; color: var(--glass-text-muted); font-weight: 400; }
+.re-card-meta { font-size: 11px; color: #555; display: flex; gap: 8px; flex-wrap: wrap; }
+.re-card-specs { font-size: 11px; color: #666; }
+.re-card-project { font-size: 11px; color: #2563eb; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.re-card-addr {
+    font-size: 11px; color: var(--glass-text-muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-top: auto;
+}
+.re-card-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 4px;
+}
+.re-source { font-size: 10px; font-weight: 600; text-transform: uppercase; }
+.re-date   { font-size: 10px; color: var(--glass-text-muted); }
+.re-pagination {
+    display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: center;
+}
+.re-page-btn {
+    padding: 4px 10px; border-radius: 5px; border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.6); cursor: pointer; font-size: 12px;
+    color: var(--glass-text);
+}
+.re-page-btn.active { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+.re-page-btn:hover:not(.active) { background: rgba(255,255,255,0.9); }
+.re-page-dots { font-size: 12px; color: var(--glass-text-muted); }
+.re-page-info { font-size: 11px; color: var(--glass-text-muted); margin-left: 8px; }
+.re-loading, .re-error, .re-empty {
+    grid-column: 1/-1; text-align: center; padding: 40px;
+    color: var(--glass-text-muted); font-size: 13px;
+}
+
+.re-modal {
+    position: fixed; inset: 0; z-index: 10000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px; pointer-events: none; opacity: 0; visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+}
+.re-modal.is-open { pointer-events: auto; opacity: 1; visibility: visible; }
+.re-modal-backdrop {
+    position: absolute; inset: 0; background: rgba(15,23,42,0.55);
+    backdrop-filter: blur(6px);
+}
+.re-modal-panel {
+    position: relative; z-index: 1;
+    width: min(960px, 100%); max-height: min(88vh, 900px);
+    overflow: hidden; display: flex; flex-direction: column;
+    border-radius: 14px;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 24px 80px rgba(0,0,0,0.25);
+}
+.re-modal-close {
+    position: absolute; top: 10px; right: 12px; z-index: 5;
+    width: 36px; height: 36px; border: none; border-radius: 8px;
+    background: rgba(255,255,255,0.9); cursor: pointer;
+    font-size: 22px; line-height: 1; color: #334155;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.re-modal-close:hover { background: #fff; }
+.re-modal-inner { overflow-y: auto; max-height: min(88vh, 900px); }
+.re-modal-loading, .re-modal-error {
+    padding: 48px; text-align: center; color: var(--glass-text-muted);
+}
+.re-modal-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: 0;
+    min-height: 320px;
+}
+@media (max-width: 720px) {
+    .re-modal-layout { grid-template-columns: 1fr; }
+}
+.re-modal-gallery {
+    background: #0f172a; display: flex; flex-direction: column;
+}
+.re-modal-main-img {
+    width: 100%; aspect-ratio: 4/3; object-fit: cover;
+    display: block; background: #1e293b;
+}
+.re-modal-thumbs {
+    display: flex; gap: 6px; padding: 8px; overflow-x: auto;
+    flex-shrink: 0;
+}
+.re-modal-thumb {
+    flex: 0 0 56px; height: 56px; padding: 0; border: 2px solid transparent;
+    border-radius: 6px; overflow: hidden; cursor: pointer; background: #334155;
+}
+.re-modal-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.re-modal-thumb.active { border-color: #38bdf8; }
+.re-modal-info {
+    padding: 20px 22px 24px; background: rgba(255,255,255,0.92);
+    color: var(--glass-text);
+}
+.re-modal-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.re-badge {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+    padding: 3px 8px; border-radius: 4px; text-transform: uppercase;
+}
+.re-badge-type { background: #ef4444; color: #fff; }
+.re-badge-cat  { background: #334155; color: #fff; }
+.re-badge-src  { background: #e2e8f0; color: #475569; }
+.re-modal-title {
+    margin: 0 0 8px; font-size: 17px; font-weight: 700; line-height: 1.35;
+    padding-right: 36px;
+}
+.re-modal-price-line { margin: 0 0 8px; font-size: 18px; font-weight: 700; color: #dc2626; }
+.re-modal-addr { margin: 0 0 14px; font-size: 13px; color: var(--glass-text-muted); line-height: 1.45; }
+.re-muted { font-weight: 400; color: var(--glass-text-muted); font-size: 14px; }
+.re-modal-specs {
+    display: grid; gap: 6px; margin-bottom: 14px;
+    font-size: 12px;
+}
+.re-spec-row {
+    display: grid; grid-template-columns: 120px 1fr; gap: 8px;
+    border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 6px;
+}
+.re-spec-k { color: var(--glass-text-muted); }
+.re-spec-v { font-weight: 500; }
+.re-modal-desc h4, .re-modal-contact h4 {
+    margin: 12px 0 6px; font-size: 12px; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--glass-text-muted);
+}
+.re-modal-desc p, .re-modal-contact p {
+    margin: 0; font-size: 13px; line-height: 1.55; white-space: pre-wrap;
+}
+.re-modal-footnote {
+    margin: 16px 0 0; font-size: 11px; color: #94a3b8;
+}
+.re-phone-note {
+    margin: 8px 0 0; font-size: 11px; line-height: 1.45; color: #64748b;
+}
+
+#market-wrapper .market-title {
+    font-size: 16px;
+    padding: 10px 14px;
+    letter-spacing: 0.04em;
+}
+header {
+    flex-shrink: 0;
+    height: 44px;
+    background: var(--glass-bg);
+    color: var(--glass-text);
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    border-radius: var(--radius);
+    font-weight: bold;
+    font-size: 14px;
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: var(--glass-shadow-soft), var(--glass-inset);
+    white-space: nowrap;
+    padding: 0 14px;
+    font-variant-numeric: tabular-nums;
+}
+#header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+#header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: flex-end;
+}
+#nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+.nav-btn {
+    background: none;
+    border: none;
+    padding: 5px 9px;
+    border-radius: 7px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--glass-text-muted);
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s;
+    white-space: nowrap;
+    letter-spacing: 0.2px;
+}
+.nav-btn:hover {
+    background: rgba(255,255,255,0.28);
+    color: var(--glass-text);
+}
+
+#map-container {
+    position: relative;
+    height: 40vh;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--glass-bg);
+    box-shadow: var(--glass-shadow), var(--glass-inset);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+.map-alerts-toolbar {
+    position: absolute;
+    z-index: 5;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--glass-text);
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: blur(10px);
+    pointer-events: auto;
+}
+.map-alerts-label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+.map-alerts-legend {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px;
+    font-size: 11px; color: var(--glass-text-muted); max-width: 100%;
+}
+.map-alerts-legend-title { font-weight: 700; color: var(--glass-text); margin-right: 4px; }
+.map-alerts-leg-item { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.map-alerts-leg-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    border: 1.5px solid #fff;
+    box-shadow: 0 0 0 1px rgba(15,23,42,0.25);
+    flex-shrink: 0;
+}
+.map-alerts-meta { margin-left: auto; font-size: 11px; color: var(--glass-text-muted); }
+@media (max-width: 900px) {
+    .map-alerts-meta { width: 100%; margin-left: 0; order: 10; }
+}
+@media (max-width: 640px) {
+    .map-alerts-meta { width: 100%; margin-left: 0; }
+}
+.mapboxgl-popup-content .am-popup { padding: 6px 4px; max-height: 380px; overflow-y: auto; }
+.mapboxgl-popup-content .am-popup h3 { margin: 0 0 8px; font-size: 15px; }
+.mapboxgl-popup-content .am-popup-section-title {
+    font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;
+    letter-spacing: 0.04em; margin: 10px 0 6px;
+}
+.mapboxgl-popup-content .am-popup-section-title:first-of-type { margin-top: 4px; }
+.mapboxgl-popup-content .am-popup-section-risk { color: #9a3412; }
+.mapboxgl-popup-content .am-news-digest {
+    margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0;
+}
+.mapboxgl-popup-content .am-news-digest-list {
+    margin: 0; padding-left: 18px; font-size: 12px; line-height: 1.45; color: #0f172a;
+}
+.mapboxgl-popup-content .am-news-digest-li { margin: 4px 0; }
+.mapboxgl-popup-content .am-news-link {
+    color: #1d4ed8; font-weight: 600; text-decoration: none;
+}
+.mapboxgl-popup-content .am-news-link:hover { text-decoration: underline; }
+.mapboxgl-popup-content .am-weather-snap {
+    background: #f8fafc; border-radius: 8px; padding: 8px 10px; margin-bottom: 10px;
+    border: 1px solid #e2e8f0; font-size: 11px;
+}
+.mapboxgl-popup-content .am-weather-snap-title {
+    font-weight: 700; font-size: 11px; color: #475569; margin-bottom: 6px;
+}
+.mapboxgl-popup-content .am-w-row {
+    display: flex; gap: 10px; align-items: flex-start; padding: 8px 0;
+    border-top: 1px solid #e2e8f0;
+}
+.mapboxgl-popup-content .am-w-row:first-of-type { border-top: none; padding-top: 0; }
+.mapboxgl-popup-content .am-w-date { flex: 0 0 56px; color: #64748b; font-weight: 600; font-size: 11px; }
+.mapboxgl-popup-content .am-w-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.mapboxgl-popup-content .am-w-temps {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px;
+}
+/* Nhiệt cao kiểu ô vàng trên dashboard thời tiết (.weather-day-card .tmax) — màu vàng/cam nổi */
+.mapboxgl-popup-content .am-w-tmax {
+    font-size: 20px; font-weight: 800; color: #ca8a04; line-height: 1;
+    letter-spacing: -0.02em;
+}
+.mapboxgl-popup-content .am-w-tsep { font-size: 14px; color: rgba(17,24,39,0.35); font-weight: 600; }
+.mapboxgl-popup-content .am-w-tmin {
+    font-size: 12px; font-weight: 600; color: rgba(17,24,39,0.65);
+}
+.mapboxgl-popup-content .am-w-label { color: #0f172a; font-weight: 600; line-height: 1.35; font-size: 12px; }
+.mapboxgl-popup-content .am-w-meta { color: #64748b; font-size: 10px; line-height: 1.35; }
+.mapboxgl-popup-content .am-popup-link-row { margin-top: 6px; }
+.mapboxgl-popup-content .am-popup-footnote { margin-top: 8px !important; font-size: 11px !important; }
+.mapboxgl-popup-content .am-popup-alerts-head {
+    font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;
+    letter-spacing: 0.04em; margin: 4px 0 6px;
+}
+.mapboxgl-popup-content .am-popup-item { border-top: 1px solid #e2e8f0; padding: 8px 0; font-size: 12px; }
+.mapboxgl-popup-content .am-popup-item-head {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;
+}
+.mapboxgl-popup-content .am-popup-layer { font-size: 11px; color: #64748b; font-weight: 600; }
+.mapboxgl-popup-content .am-sev-pill {
+    font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+    background: #e2e8f0; color: #334155;
+}
+.mapboxgl-popup-content .am-sev-critical .am-sev-pill { background: #fee2e2; color: #991b1b; }
+.mapboxgl-popup-content .am-sev-warning .am-sev-pill { background: #ffedd5; color: #9a3412; }
+.mapboxgl-popup-content .am-sev-watch .am-sev-pill { background: #fef9c3; color: #854d0e; }
+.mapboxgl-popup-content .am-sev-info .am-sev-pill { background: #dbeafe; color: #1e40af; }
+.mapboxgl-popup-content .am-popup-title { font-weight: 600; margin-bottom: 4px; color: #0f172a; }
+.mapboxgl-popup-content .am-popup-sum { color: #334155; line-height: 1.45; }
+.mapboxgl-popup-content .am-popup-none { margin: 0; font-size: 12px; color: #64748b; }
+#map { height: 100%; }
+#news-wrapper {
+    height: 60vh; display: flex; gap: 10px; overflow: hidden;
+}
+.column {
+    flex: 1; display: flex; flex-direction: column; gap: 8px;
+}
+.label {
+    background: rgba(255,255,255,0.18);
+    color: var(--glass-text);
+    padding: 6px;
+    text-align: center; font-weight: bold; font-size: 12px;
+    border-radius: var(--radius); text-transform: uppercase;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow-soft), var(--glass-inset);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    letter-spacing: 0.10em;
+    font-weight: 900;
+}
+.grid-12 {
+    flex: 1; display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 6px; overflow: hidden;
+}
+.panel {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    display: flex; flex-direction: column; overflow: hidden;
+    box-shadow: var(--glass-shadow), var(--glass-inset);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    position: relative;
+}
+.panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+        radial-gradient(520px 160px at 18% 0%, rgba(56,189,248,0.12) 0%, rgba(56,189,248,0) 60%),
+        radial-gradient(520px 160px at 82% 10%, rgba(244,114,182,0.10) 0%, rgba(244,114,182,0) 62%),
+        radial-gradient(520px 160px at 50% 100%, rgba(167,139,250,0.10) 0%, rgba(167,139,250,0) 65%);
+}
+.panel-header {
+    background: rgba(255,255,255,0.22);
+    color: var(--glass-text);
+    padding: 6px;
+    font-size: 13px;
+    text-align: center;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    border-bottom: 1px solid rgba(255,255,255,0.28);
+    text-shadow: 0 1px 0 rgba(255,255,255,0.45);
+    text-transform: none;
+}
+.panel-content {
+    flex: 1; padding: 8px; overflow-y: auto; font-size: 11px;
+    color: var(--glass-text);
+}
+.news-item {
+    padding: 6px 0; border-bottom: 1px solid #eee; cursor: pointer;
+}
+.news-item:hover { color: var(--primary-red); }
+.pulse {
+    width: 12px; height: 12px; background: var(--primary-red);
+    border: 2px solid white; border-radius: 50%; animation: pulse 2s infinite;
+}
+.dot {
+    width: 10px; height: 10px;
+    background: rgba(17,24,39,0.65);
+    border: 2px solid rgba(255,255,255,0.9);
+    border-radius: 50%;
+}
+@keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
+.world-horizontal-split {
+    flex: 1; display: flex; gap: 8px; overflow: hidden;
+}
+.world-horizontal-split .panel {
+    flex: 1 1 50%;
+    min-width: 0;
+}
+
+.weather-section {
+    margin-top: 0;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius);
+    padding: 10px;
+}
+.weather-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+.weather-title {
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 16px;
+    color: #0b1220;
+    display: inline-block;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow-soft);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    position: relative;
+}
+.weather-title::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.06) 55%, rgba(255,255,255,0.00) 100%);
+}
+.weather-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.weather-select {
+    padding: 8px 10px;
+    border-radius: var(--radius);
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    color: #0b1220;
+    font-size: 12px;
+    min-width: 240px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: var(--glass-shadow-soft);
+}
+.weather-select:disabled {
+    opacity: 0.6;
+}
+.weather-select option {
+    color: #111; 
+}
+.weather-top-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.weather-top-card {
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    background: var(--glass-bg);
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--glass-shadow), var(--glass-inset);
+    position: relative;
+}
+.weather-top-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(520px 170px at 18% 0%, rgba(56,189,248,0.12) 0%, rgba(56,189,248,0.00) 62%),
+        radial-gradient(520px 170px at 82% 0%, rgba(244,114,182,0.10) 0%, rgba(244,114,182,0.00) 62%),
+        radial-gradient(520px 170px at 50% 100%, rgba(167,139,250,0.10) 0%, rgba(167,139,250,0.00) 65%),
+        linear-gradient(180deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.03) 45%, rgba(255,255,255,0.00) 100%);
+    mix-blend-mode: normal;
+}
+.weather-top-head {
+    padding: 8px 10px;
+    font-weight: 700;
+    font-size: 12px;
+    background: rgba(255,255,255,0.22);
+    border-bottom: 1px solid rgba(255,255,255,0.35);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+.weather-top-body {
+    padding: 10px;
+    font-size: 12px;
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 10px;
+    align-items: start;
+}
+.weather-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--glass-bg-strong);
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    border: 1px solid var(--glass-border);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.65);
+}
+.weather-metrics {
+    display: grid;
+    gap: 6px;
+}
+.weather-metric {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    border-bottom: 1px solid rgba(17,24,39,0.08);
+    padding-bottom: 6px;
+}
+.weather-metric:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.weather-metric .k {
+    color: rgba(17,24,39,0.75);
+    font-weight: 600;
+}
+.weather-metric .v {
+    color: #0b1220;
+}
+.weather-updated {
+    font-size: 11px;
+    color: rgba(17,24,39,0.70);
+    font-weight: 600;
+}
+
+.tv-link {
+    display: inline-block;
+    padding: 8px 10px;
+    border-radius: 999px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow-soft), var(--glass-inset);
+    color: var(--glass-text);
+    text-decoration: none;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+.tv-link:hover { filter: brightness(0.98); }
+.weather-7d-header {
+    background: var(--glass-bg);
+    color: #0b1220;
+    font-weight: 700;
+    text-align: center;
+    padding: 8px 10px;
+    border-radius: var(--radius);
+    margin-bottom: 8px;
+    font-size: 12px;
+    text-transform: uppercase;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow-soft);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    position: relative;
+}
+.weather-7d-header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.05) 55%, rgba(255,255,255,0.00) 100%);
+}
+.weather-7d-strip {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(120px, 1fr);
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+}
+.weather-day-card {
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    background: var(--glass-bg);
+    padding: 10px;
+    min-width: 120px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--glass-shadow), var(--glass-inset);
+    position: relative;
+}
+.weather-day-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.04) 45%, rgba(255,255,255,0.00) 100%);
+}
+
+.weather-7d-strip::-webkit-scrollbar {
+    height: 10px;
+}
+.weather-7d-strip::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.35);
+    border-radius: 999px;
+}
+.weather-7d-strip::-webkit-scrollbar-thumb {
+    background: rgba(17,24,39,0.18);
+    border-radius: 999px;
+}
+.weather-day-card .d {
+    font-weight: 700;
+    font-size: 12px;
+    margin-bottom: 2px;
+    color: #0b1220;
+}
+.weather-day-card .dt {
+    font-size: 11px;
+    color: rgba(17,24,39,0.70);
+    margin-bottom: 8px;
+}
+.weather-day-card .wi {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.weather-day-card .tmax {
+    font-size: 20px;
+    font-weight: 800;
+}
+.weather-day-card .tmin {
+    font-size: 12px;
+    color: rgba(17,24,39,0.70);
+    margin-top: 2px;
+}
+.weather-mini {
+    display: grid;
+    gap: 6px;
+    font-size: 11px;
+    color: rgba(17,24,39,0.82);
+}
+.weather-mini div {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+@media (max-width: 900px) {
+    .weather-top-cards { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<header id="header" class="glass-3d">
+    <div id="header-left">
+        <span style="font-weight:800;font-size:13px;letter-spacing:0.8px;color:var(--glass-text)">VIETNAM MONITOR</span>
+        <span style="width:1px;height:14px;background:var(--glass-border);display:inline-block"></span>
+        <span id="clock" style="font-size:11px;font-weight:500;color:var(--glass-text-muted)"></span>
+    </div>
+
+    <nav id="nav-links">
+        <button class="nav-btn" onclick="document.getElementById('news-wrapper').scrollIntoView({behavior:'smooth'})">TIN TỨC</button>
+        <button class="nav-btn" onclick="document.getElementById('weather-wrapper').scrollIntoView({behavior:'smooth'})">THỜI TIẾT</button>
+        <button class="nav-btn" onclick="document.getElementById('market-wrapper').scrollIntoView({behavior:'smooth'})">CHỨNG KHOÁN</button>
+        <button class="nav-btn" onclick="document.getElementById('commodity-wrapper').scrollIntoView({behavior:'smooth'})">VÀNG</button>
+        <button class="nav-btn" onclick="(document.getElementById('cm-fuel-strip')||document.getElementById('commodity-wrapper')).scrollIntoView({behavior:'smooth'})">XĂNG DẦU</button>
+        <button class="nav-btn" onclick="(document.getElementById('re-wrapper')||document.getElementById('scroll-body')).scrollIntoView({behavior:'smooth'})">BẤT ĐỘNG SẢN</button>
+    </nav>
+
+    <div id="header-right">
+        <div id="auth-info" style="display:none;align-items:center;gap:8px;font-size:13px;color:var(--glass-text)">
+            <span id="auth-display-name" style="font-weight:600"></span>
+            <button id="auth-logout-btn" style="background:rgba(255,255,255,0.18);backdrop-filter:blur(8px);border:1px solid var(--glass-border);border-radius:8px;padding:5px 12px;cursor:pointer;font-size:12px;color:var(--glass-text);font-weight:600;transition:background 0.2s">Đăng xuất</button>
+        </div>
+        <button id="auth-login-btn" style="background:linear-gradient(135deg,rgba(255,255,255,0.28),rgba(255,255,255,0.12));backdrop-filter:blur(12px);border:1px solid var(--glass-border);border-radius:8px;padding:6px 16px;color:var(--glass-text);cursor:pointer;font-size:13px;font-weight:700;box-shadow:inset 0 1px 0 rgba(255,255,255,0.6);transition:background 0.2s;text-transform:uppercase;letter-spacing:0.5px">ĐĂNG NHẬP</button>
+    </div>
+</header>
+
+<button id="chat-toggle-btn" title="Trợ lý AI">
+    <svg width="22" height="22" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Anten -->
+        <line x1="32" y1="4" x2="32" y2="13" stroke="#d32f2f" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="32" cy="4" r="3" fill="#d32f2f"/>
+        <!-- Đầu -->
+        <rect x="12" y="13" width="40" height="26" rx="8" fill="rgba(211,47,47,0.15)" stroke="#d32f2f" stroke-width="2.5"/>
+        <!-- Mắt trái -->
+        <circle cx="23" cy="25" r="4" fill="#d32f2f"/>
+        <circle cx="23" cy="25" r="2" fill="white"/>
+        <!-- Mắt phải -->
+        <circle cx="41" cy="25" r="4" fill="#d32f2f"/>
+        <circle cx="41" cy="25" r="2" fill="white"/>
+        <!-- Miệng -->
+        <rect x="22" y="33" width="20" height="3" rx="1.5" fill="#d32f2f" opacity="0.7"/>
+        <!-- Thân -->
+        <rect x="18" y="41" width="28" height="16" rx="5" fill="rgba(211,47,47,0.12)" stroke="#d32f2f" stroke-width="2"/>
+        <!-- Tay trái -->
+        <rect x="8" y="43" width="8" height="10" rx="4" fill="rgba(211,47,47,0.15)" stroke="#d32f2f" stroke-width="2"/>
+        <!-- Tay phải -->
+        <rect x="48" y="43" width="8" height="10" rx="4" fill="rgba(211,47,47,0.15)" stroke="#d32f2f" stroke-width="2"/>
+    </svg>
+</button>
+
+<div id="auth-modal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(17,24,39,0.32);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);align-items:center;justify-content:center">
+    <div style="position:relative;background:rgba(255,255,255,0.14);backdrop-filter:blur(28px) saturate(210%);-webkit-backdrop-filter:blur(28px) saturate(210%);border:1px solid var(--glass-border);border-radius:20px;padding:32px 28px;width:340px;box-shadow:0 34px 90px rgba(17,24,39,0.22),inset 0 1px 0 rgba(255,255,255,0.55);overflow:hidden">
+    <div style="position:absolute;inset:0;border-radius:20px;pointer-events:none;background:radial-gradient(700px 220px at 18% 0%,rgba(255,255,255,0.22) 0%,rgba(255,255,255,0) 60%),radial-gradient(620px 220px at 82% 0%,rgba(255,255,255,0.18) 0%,rgba(255,255,255,0) 60%),linear-gradient(180deg,rgba(255,255,255,0.18) 0%,rgba(255,255,255,0.05) 45%,rgba(255,255,255,0) 100%)"></div>
+        <button id="auth-modal-close" style="position:absolute;top:14px;right:14px;z-index:1;background:rgba(255,255,255,0.22);border:1px solid var(--glass-border);border-radius:50%;width:26px;height:26px;font-size:14px;cursor:pointer;color:var(--glass-text);display:flex;align-items:center;justify-content:center">✕</button>
+
+        <div style="position:relative;z-index:1;display:flex;gap:0;margin-bottom:24px;border-bottom:1px solid var(--glass-border)">
+            <button class="auth-tab active" data-tab="login" style="flex:1;padding:9px;border:none;background:none;font-weight:700;font-size:14px;cursor:pointer;border-bottom:2px solid #d32f2f;margin-bottom:-1px;color:#d32f2f">Đăng nhập</button>
+            <button class="auth-tab" data-tab="register" style="flex:1;padding:9px;border:none;background:none;font-weight:600;font-size:14px;cursor:pointer;color:var(--glass-text-muted)">Đăng ký</button>
+        </div>
+
+        <div id="auth-tab-login" style="position:relative;z-index:1">
+            <div style="margin-bottom:14px">
+                <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;color:var(--glass-text-muted);text-transform:uppercase;letter-spacing:0.5px">Email</label>
+                <input id="login-email" type="email" placeholder="email@example.com" style="width:100%;padding:9px 12px;border:1px solid var(--glass-border);border-radius:9px;font-size:14px;box-sizing:border-box;background:rgba(255,255,255,0.35);backdrop-filter:blur(8px);color:var(--glass-text);outline:none">
+            </div>
+            <div style="margin-bottom:20px">
+                <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;color:var(--glass-text-muted);text-transform:uppercase;letter-spacing:0.5px">Mật khẩu</label>
+                <input id="login-password" type="password" placeholder="••••••" style="width:100%;padding:9px 12px;border:1px solid var(--glass-border);border-radius:9px;font-size:14px;box-sizing:border-box;background:rgba(255,255,255,0.35);backdrop-filter:blur(8px);color:var(--glass-text);outline:none">
+            </div>
+            <div id="login-error" style="display:none;color:#d32f2f;font-size:13px;margin-bottom:12px;background:rgba(211,47,47,0.08);padding:8px 12px;border-radius:7px;border:1px solid rgba(211,47,47,0.2)"></div>
+            <button id="login-submit" style="width:100%;padding:11px;background:linear-gradient(135deg,#d32f2f,#b71c1c);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(211,47,47,0.35)">Đăng nhập</button>
+            <div style="display:flex;align-items:center;gap:8px;margin:16px 0 0">
+                <div style="flex:1;height:1px;background:var(--glass-border)"></div>
+                <span style="font-size:12px;color:var(--glass-text-muted)">hoặc</span>
+                <div style="flex:1;height:1px;background:var(--glass-border)"></div>
+            </div>
+            <a href="http://localhost:5000/auth/google" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:10px;margin-top:12px;border:1px solid var(--glass-border);border-radius:10px;font-size:14px;font-weight:600;color:var(--glass-text);text-decoration:none;box-sizing:border-box;background:rgba(255,255,255,0.28);backdrop-filter:blur(8px)">
+                <img src="https://www.google.com/favicon.ico" width="18" height="18"> Đăng nhập bằng Google
+            </a>
+        </div>
+
+        <div id="auth-tab-register" style="display:none;position:relative;z-index:1">
+            <div style="margin-bottom:14px">
+                <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;color:var(--glass-text-muted);text-transform:uppercase;letter-spacing:0.5px">Tên hiển thị</label>
+                <input id="register-name" type="text" placeholder="Nguyễn Văn A" style="width:100%;padding:9px 12px;border:1px solid var(--glass-border);border-radius:9px;font-size:14px;box-sizing:border-box;background:rgba(255,255,255,0.35);backdrop-filter:blur(8px);color:var(--glass-text);outline:none">
+            </div>
+            <div style="margin-bottom:14px">
+                <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;color:var(--glass-text-muted);text-transform:uppercase;letter-spacing:0.5px">Email</label>
+                <input id="register-email" type="email" placeholder="email@example.com" style="width:100%;padding:9px 12px;border:1px solid var(--glass-border);border-radius:9px;font-size:14px;box-sizing:border-box;background:rgba(255,255,255,0.35);backdrop-filter:blur(8px);color:var(--glass-text);outline:none">
+            </div>
+            <div style="margin-bottom:20px">
+                <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;color:var(--glass-text-muted);text-transform:uppercase;letter-spacing:0.5px">Mật khẩu</label>
+                <input id="register-password" type="password" placeholder="Ít nhất 6 ký tự" style="width:100%;padding:9px 12px;border:1px solid var(--glass-border);border-radius:9px;font-size:14px;box-sizing:border-box;background:rgba(255,255,255,0.35);backdrop-filter:blur(8px);color:var(--glass-text);outline:none">
+            </div>
+            <div id="register-error" style="display:none;color:#d32f2f;font-size:13px;margin-bottom:12px;background:rgba(211,47,47,0.08);padding:8px 12px;border-radius:7px;border:1px solid rgba(211,47,47,0.2)"></div>
+            <button id="register-submit" style="width:100%;padding:11px;background:linear-gradient(135deg,#d32f2f,#b71c1c);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(211,47,47,0.35)">Tạo tài khoản</button>
+        </div>
+    </div>
+</div>
+<div id="scroll-body">
+<div id="map-container" class="glass-3d">
+    <div class="map-alerts-toolbar">
+        <label class="map-alerts-label"><input type="checkbox" id="map-alerts-toggle" checked> Cảnh báo rủi ro</label>
+        <div class="map-alerts-legend" role="group" aria-label="Ghi chú màu chấm trên bản đồ">
+            <span class="map-alerts-legend-title">Ghi chú:</span>
+            <span class="map-alerts-leg-item"><span class="map-alerts-leg-dot" style="background:#dc2626"></span>Đỏ — rất nghiêm trọng</span>
+            <span class="map-alerts-leg-item"><span class="map-alerts-leg-dot" style="background:#f97316"></span>Cam — cảnh báo</span>
+            <span class="map-alerts-leg-item"><span class="map-alerts-leg-dot" style="background:#eab308"></span>Vàng — theo dõi</span>
+            <span class="map-alerts-leg-item"><span class="map-alerts-leg-dot" style="background:#3b82f6"></span>Xanh — thông tin</span>
+            <span class="map-alerts-leg-item"><span class="map-alerts-leg-dot" style="background:#e2e8f0"></span>Trắng/xám — bình thường</span>
+        </div>
+        <span id="map-alerts-meta" class="map-alerts-meta">Đang chờ dữ liệu…</span>
+    </div>
+    <div id="map"></div>
+</div>
+<div id="news-wrapper">
+    <div class="column">
+        <div class="label glass-3d">TIN TỨC TRONG NƯỚC</div>
+        <div class="grid-12" id="local-grid"></div>
+    </div>
+    <div class="column">
+        <div class="label glass-3d">TIN TỨC THẾ GIỚI</div>
+        <div class="world-horizontal-split">
+            <div class="panel">
+                <div class="panel-header">LIVES</div>
+                <div class="panel-content" id="world-lives" style="padding: 0;">
+    <iframe src="lives.html" style="width: 100%; height: 100%; border: none;"></iframe>
+</div>
+            </div>
+            <div class="panel">
+                <div class="panel-header">NEWS</div>
+                <div class="panel-content" id="world-news"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="weather-wrapper" class="weather-section"></div>
+
+<div id="market-wrapper" class="weather-section" style="margin-top:-8px;padding-top:0;"></div>
+
+<div id="commodity-wrapper" class="weather-section" style="margin-top:0;padding-top:0;"></div>
+
+
+</div><!-- /#scroll-body -->
+
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoidnVkYXQyMDAyIiwiYSI6ImNtbWExcnlkMDA4emYyb29oeWR3a2xmeXIifQ.JS9YKCF1uKHguf1NbhpOFA';
+const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/light-v11',
+    center: [105.8342, 21.0278],
+    zoom: 5.5
+});
+window.map = map;
+map.on('load', () => map.resize());
+
+const categories = ["THỜI SỰ","PHÁP LUẬT","SỨC KHỎE","ĐỜI SỐNG","DU LỊCH","KINH DOANH","BẤT ĐỘNG SẢN","THỂ THAO","GIẢI TRÍ","GIÁO DỤC","NỘI VỤ","CÔNG NGHỆ"];
+const grid = document.getElementById('local-grid');
+categories.forEach((name, i) => {
+    const panel = document.createElement('div');
+    panel.className = 'panel glass-3d';
+    panel.innerHTML = `
+        <div class="panel-header">${name}</div>
+        <div class="panel-content" id="p${i+1}"></div>
+    `;
+    grid.appendChild(panel);
+});
+
+const seenUrls = new Set();
+const _mapMarkers = [];   
+const MAX_MARKERS = 100;
+let newsQueue = [];
+let flushScheduled = false;
+
+function addNewsItem(item) {
+    if (!item || !item.url) return;
+    if (seenUrls.has(item.url)) return;
+    seenUrls.add(item.url);
+    if (seenUrls.size > 800) {
+        const first = seenUrls.values().next().value;
+        seenUrls.delete(first);
+    }
+
+    const markerEl = document.createElement('div');
+    if (item.severity >= 8) {
+        markerEl.className = 'pulse';
+        markerEl.style.background = 'red';
+    } else {
+        markerEl.className = 'dot';
+    }
+    const marker = new mapboxgl.Marker(markerEl).setLngLat(item.coords).addTo(map);
+    _mapMarkers.push(marker);
+    if (_mapMarkers.length > MAX_MARKERS) {
+        const old = _mapMarkers.shift();
+        try { old.remove(); } catch(_) {}
+    }
+
+    let panelId = item.categoryId;
+    if (panelId === "world-news") {
+        panelId = "world-news";
+    }
+    const panel = document.getElementById(panelId);
+    if (panel) {
+        const div = document.createElement('div');
+        div.className = 'news-item';
+        div.innerHTML = `• ${item.title}`;
+        div.onclick = () => {
+            map.flyTo({ center: item.coords, zoom: 10 });
+            window.open(item.url, '_blank');
+        };
+        const preserve = panel.scrollTop > 10;
+        const before = preserve ? panel.scrollHeight : 0;
+        panel.insertBefore(div, panel.firstChild);
+        if (preserve) {
+            const after = panel.scrollHeight;
+            panel.scrollTop += (after - before);
+        }
+        while (panel.children.length > 30) {
+            panel.removeChild(panel.lastElementChild);
+        }
+    } else {
+        console.warn('[WARN] Panel not found for category:', item.categoryId);
+    }
+}
+
+function enqueueNewsItem(item) {
+    newsQueue.push(item);
+    if (flushScheduled) return;
+    flushScheduled = true;
+    setTimeout(() => {
+        flushScheduled = false;
+        const batch = newsQueue;
+        newsQueue = [];
+        batch.forEach(addNewsItem);
+    }, 200);
+}
+
+async function loadInitialData() {
+    console.log('[DEBUG] Bắt đầu load dữ liệu ban đầu...');
+    try {
+        const res = await fetch('http://localhost:5000/data');
+        if (!res.ok) throw new Error(`Endpoint /data lỗi: ${res.status}`);
+        const data = await res.json();
+        console.log('[DEBUG] Load từ /data thành công:', data.length, 'tin');
+        data.forEach(enqueueNewsItem);
+    } catch (err) {
+        console.error('[ERROR] Load /data thất bại:', err);
+        try {
+            const fallbackRes = await fetch('data.json?v=' + Date.now());
+            const fallbackData = await fallbackRes.json();
+            console.log('[DEBUG] Fallback từ data.json:', fallbackData.length, 'tin');
+            fallbackData.forEach(enqueueNewsItem);
+        } catch (fallbackErr) {
+            console.error('[ERROR] Fallback thất bại:', fallbackErr);
+        }
+    }
+}
+
+let eventSource = new EventSource('http://localhost:5000/stream');
+
+eventSource.onopen = () => {
+    console.log('[SSE] Kết nối thành công!');
+};
+
+eventSource.onmessage = (e) => {
+    try {
+        const item = JSON.parse(e.data);
+        enqueueNewsItem(item);
+    } catch (err) {
+        console.error('[SSE] Parse error:', err);
+    }
+};
+
+eventSource.onerror = (err) => {
+    console.error('[SSE] Lỗi kết nối:', err);
+    eventSource.close();
+    setTimeout(() => {
+        console.log('[SSE] Tự reconnect sau 5s...');
+        eventSource = new EventSource('http://localhost:5000/stream');
+    }, 5000);
+};
+
+map.on('load', () => {
+    loadInitialData();
+});
+
+setInterval(() => {
+    document.getElementById('clock').textContent = new Date().toLocaleString('vi-VN');
+}, 1000);
+</script>
+<script src="alerts_map.js?v=4"></script>
+<script src="weather.js"></script>
+<script src="market.js"></script>
+<script src="commodity.js?v=13"></script>
+<script src="real_estate.js?v=5"></script>
+
+<style>
+#chat-toggle-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.10) 100%);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 2px solid #d32f2f;
+    color: var(--glass-text);
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 0 0 4px rgba(211,47,47,0.15), var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,0.7);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+#chat-toggle-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 6px rgba(211,47,47,0.18), var(--glass-shadow-soft), inset 0 1px 0 rgba(193, 74, 74, 0.8);
+}
+
+#chat-widget {
+    display: none;
+    flex-direction: column;
+    position: fixed;
+    bottom: 88px;
+    right: 24px;
+    width: 360px;
+    height: 520px;
+    background: var(--glass-bg-strong);
+    backdrop-filter: blur(28px) saturate(210%);
+    -webkit-backdrop-filter: blur(28px) saturate(210%);
+    border: 1px solid var(--glass-border);
+    border-radius: 18px;
+    box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,0.55);
+    z-index: 9999;
+    overflow: hidden;
+    transform-origin: bottom right;
+    animation: chatOpen 0.22s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes chatOpen {
+    from { opacity: 0; transform: scale(0.88) translateY(12px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+#chat-widget.open { display: flex; }
+
+#chat-header {
+    background: linear-gradient(135deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.10) 100%);
+    padding: 12px 16px;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--glass-text);
+    border-bottom: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.55);
+}
+#chat-close {
+    background: rgba(255,255,255,0.18);
+    border: 1px solid var(--glass-border);
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--glass-text-muted);
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+#chat-close:hover { background: rgba(255,255,255,0.38); }
+#chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+#chat-messages::-webkit-scrollbar { width: 4px; }
+#chat-messages::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 4px; }
+.chat-msg {
+    max-width: 82%;
+    padding: 9px 13px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.55;
+    word-break: break-word;
+}
+.chat-msg.user {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #d32f2f, #b71c1c);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 2px 12px rgba(211,47,47,0.28);
+}
+.chat-msg.bot {
+    align-self: flex-start;
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(8px);
+    color: var(--glass-text);
+    border: 1px solid var(--glass-border);
+    border-bottom-left-radius: 4px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+}
+.chat-msg.typing {
+    color: var(--glass-text-muted);
+    font-style: italic;
+}
+#chat-input-row {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    border-top: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(8px);
+}
+#chat-input {
+    flex: 1;
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    background: rgba(255,255,255,0.45);
+    backdrop-filter: blur(8px);
+    background: rgba(255,255,255,0.6);
+    color: var(--glass-text);
+    outline: none;
+}
+#chat-input:focus { border-color: #d32f2f; }
+#chat-send {
+    background: #d32f2f;
+    border: none;
+    border-radius: 7px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 15px;
+    padding: 0 12px;
+    transition: background 0.2s;
+}
+#chat-send:hover { background: #b71c1c; }
+#chat-send:disabled { background: #aaa; cursor: not-allowed; }
+</style>
+
+<div id="chat-widget">
+    <div id="chat-header">
+        VMBot
+        <button id="chat-close" title="Đóng">✕</button>
+    </div>
+    <div id="chat-messages">
+        <div class="chat-msg bot">Xin chào! Tôi có thể giúp gì cho bạn ?</div>
+    </div>
+    <div id="chat-input-row">
+        <input id="chat-input" type="text" placeholder="Nhập câu hỏi..." autocomplete="off"/>
+        <button id="chat-send">➤</button>
+    </div>
+</div>
+
+<script>
+(function () {
+    const widget   = document.getElementById('chat-widget');
+    const toggleBtn = document.getElementById('chat-toggle-btn');
+    const closeBtn = document.getElementById('chat-close');
+    const messages = document.getElementById('chat-messages');
+    const input    = document.getElementById('chat-input');
+    const sendBtn  = document.getElementById('chat-send');
+
+    toggleBtn.addEventListener('click', () => widget.classList.toggle('open'));
+    closeBtn.addEventListener('click', () => widget.classList.remove('open'));
+
+    function parseMarkdown(text) {
+        return text
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:#d32f2f;text-decoration:underline;font-weight:500">$1</a>')
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.+?)\*/g, '<em>$1</em>')
+            .replace(/`(.+?)`/g, '<code>$1</code>')
+            .replace(/^\* (.+)/gm, '<li>$1</li>')
+            .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+            .replace(/\n{2,}/g, '</p><p>')
+            .replace(/\n/g, '<br>')
+            .replace(/^(.+)$/, '<p>$1</p>');
+    }
+
+    function addMsg(text, role) {
+        const div = document.createElement('div');
+        div.className = 'chat-msg ' + role;
+        if (role === 'bot') {
+            div.innerHTML = parseMarkdown(text);
+        } else {
+            div.textContent = text;
+        }
+        messages.appendChild(div);
+        while (messages.children.length > 60) {
+            messages.removeChild(messages.firstElementChild);
+        }
+        messages.scrollTop = messages.scrollHeight;
+        return div;
+    }
+
+    async function sendMessage() {
+        const text = input.value.trim();
+        if (!text) return;
+
+        input.value = '';
+        sendBtn.disabled = true;
+        addMsg(text, 'user');
+
+        const statusDiv = document.createElement('div');
+        statusDiv.className = 'chat-msg bot typing';
+        statusDiv.textContent = 'Đang xử lý...';
+        messages.appendChild(statusDiv);
+
+        const botDiv = document.createElement('div');
+        botDiv.className = 'chat-msg bot';
+        botDiv.style.display = 'none';
+        messages.appendChild(botDiv);
+        messages.scrollTop = messages.scrollHeight;
+
+        let fullText = '';
+
+        try {
+            const token = localStorage.getItem('vm_token');
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            const res = await fetch('http://localhost:5000/chat', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ message: text }),
+            });
+
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop();
+
+                for (const line of lines) {
+                    if (!line.startsWith('data: ')) continue;
+                    try {
+                        const payload = JSON.parse(line.slice(6));
+                        if (payload.status) {
+                            statusDiv.textContent = payload.status;
+                        }
+                        if (payload.token) {
+                            statusDiv.style.display = 'none';
+                            botDiv.style.display = '';
+                            fullText += payload.token;
+                            // Dùng textContent khi streaming để tránh parse DOM liên tục
+                            botDiv.textContent = fullText;
+                            messages.scrollTop = messages.scrollHeight;
+                        }
+                        if (payload.done) {
+                            statusDiv.remove();
+                            // Render markdown đầy đủ chỉ 1 lần khi hoàn tất
+                            botDiv.innerHTML = parseMarkdown(fullText);
+                            messages.scrollTop = messages.scrollHeight;
+                        }
+                        if (payload.error) {
+                            statusDiv.remove();
+                            botDiv.style.display = '';
+                            botDiv.textContent = 'Lỗi: ' + payload.error;
+                        }
+                    } catch (_) {}
+                }
+            }
+        } catch (e) {
+            botDiv.textContent = 'Không kết nối được server.';
+        }
+
+        sendBtn.disabled = false;
+        input.focus();
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+})();
+
+(function () {
+    const modal       = document.getElementById('auth-modal');
+    const loginBtn    = document.getElementById('auth-login-btn');
+    const closeBtn    = document.getElementById('auth-modal-close');
+    const authInfo    = document.getElementById('auth-info');
+    const displayName = document.getElementById('auth-display-name');
+    const logoutBtn   = document.getElementById('auth-logout-btn');
+    const tabs        = document.querySelectorAll('.auth-tab');
+    const tabLogin    = document.getElementById('auth-tab-login');
+    const tabRegister = document.getElementById('auth-tab-register');
+
+    function restoreSession() {
+        const token = localStorage.getItem('vm_token');
+        const user  = JSON.parse(localStorage.getItem('vm_user') || 'null');
+        if (token && user) {
+            loginBtn.style.display = 'none';
+            authInfo.style.display = 'flex';
+            displayName.textContent = user.display_name || user.email;
+        }
+    }
+
+    function saveSession(token, user) {
+        localStorage.setItem('vm_token', token);
+        localStorage.setItem('vm_user', JSON.stringify(user));
+        loginBtn.style.display = 'none';
+        authInfo.style.display = 'flex';
+        displayName.textContent = user.display_name || user.email;
+        modal.style.display = 'none';
+    }
+
+    function clearSession() {
+        localStorage.removeItem('vm_token');
+        localStorage.removeItem('vm_user');
+        loginBtn.style.display = '';
+        authInfo.style.display = 'none';
+    }
+
+    loginBtn.addEventListener('click', () => modal.style.display = 'flex');
+    closeBtn.addEventListener('click', () => modal.style.display = 'none');
+    modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+
+    logoutBtn.addEventListener('click', clearSession);
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => {
+                t.classList.remove('active');
+                t.style.borderBottom = 'none';
+                t.style.color = '#666';
+                t.style.fontWeight = '600';
+            });
+            tab.classList.add('active');
+            tab.style.borderBottom = '2px solid #d32f2f';
+            tab.style.color = '#d32f2f';
+            tab.style.fontWeight = '700';
+            const isLogin = tab.dataset.tab === 'login';
+            tabLogin.style.display    = isLogin ? '' : 'none';
+            tabRegister.style.display = isLogin ? 'none' : '';
+        });
+    });
+
+    document.getElementById('login-submit').addEventListener('click', async () => {
+        const email    = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+        const errDiv   = document.getElementById('login-error');
+        errDiv.style.display = 'none';
+
+        try {
+            const res  = await fetch('http://localhost:5000/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+            const data = await res.json();
+            if (!res.ok) { errDiv.textContent = data.error; errDiv.style.display = ''; return; }
+            saveSession(data.token, data.user);
+        } catch (e) {
+            errDiv.textContent = 'Không kết nối được server.';
+            errDiv.style.display = '';
+        }
+    });
+
+    document.getElementById('register-submit').addEventListener('click', async () => {
+        const display_name = document.getElementById('register-name').value.trim();
+        const email        = document.getElementById('register-email').value.trim();
+        const password     = document.getElementById('register-password').value;
+        const errDiv       = document.getElementById('register-error');
+        errDiv.style.display = 'none';
+
+        try {
+            const res  = await fetch('http://localhost:5000/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password, display_name }),
+            });
+            const data = await res.json();
+            if (!res.ok) { errDiv.textContent = data.error; errDiv.style.display = ''; return; }
+            saveSession(data.token, data.user);
+        } catch (e) {
+            errDiv.textContent = 'Không kết nối được server.';
+            errDiv.style.display = '';
+        }
+    });
+
+    document.getElementById('login-password').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('login-submit').click();
+    });
+    document.getElementById('register-password').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('register-submit').click();
+    });
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const googleToken = urlParams.get('token');
+    const googleName  = urlParams.get('name');
+    const googleEmail = urlParams.get('email');
+    const authError   = urlParams.get('auth_error');
+
+    if (googleToken) {
+        saveSession(googleToken, { display_name: googleName, email: googleEmail });
+        window.history.replaceState({}, document.title, '/');
+    } else if (authError) {
+        console.error('Google OAuth error:', authError);
+        window.history.replaceState({}, document.title, '/');
+    } else {
+        restoreSession();
+    }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>LIVES - Livestream Tin Tức</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root { --radius: 10px; }
+    body {
+      margin: 0;
+      padding: 8px;
+      font-family: system-ui, sans-serif;
+      background: transparent;
+    }
+    .lives-container {
+      display: grid;
+      gap: 10px;
+    }
+    .live-item {
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.28);
+      box-shadow: 0 18px 40px rgba(17,24,39,0.12), inset 0 1px 0 rgba(255,255,255,0.55);
+      backdrop-filter: blur(16px) saturate(170%);
+      -webkit-backdrop-filter: blur(16px) saturate(170%);
+    }
+    .live-header {
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      color: rgba(17,24,39,0.85);
+      background: rgba(255,255,255,0.22);
+      border-bottom: 1px solid rgba(255,255,255,0.28);
+      text-transform: uppercase;
+    }
+    .live-frame {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: 0;
+      display: block;
+      background: #000;
+    }
+    .status {
+      padding: 8px 10px;
+      font-size: 11px;
+      color: rgba(17,24,39,0.70);
+      background: rgba(255,255,255,0.12);
+      border-top: 1px solid rgba(255,255,255,0.18);
+    }
+  </style>
+</head>
+<body>
+  <div class="lives-container">
+    <div class="live-item">
+      <div class="live-header">VTC NOW</div>
+      <iframe
+        class="live-frame"
+        data-channel-id="UCL9-pEHNBs3N4r2bMoXdLJA"
+        title="VTC NOW Live"
+        loading="lazy"
+        referrerpolicy="origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen
+      ></iframe>
+    </div>
+
+    <div class="live-item">
+      <div class="live-header">Sky News</div>
+      <iframe
+        class="live-frame"
+        data-channel-id="UCoMdktPbSTixAyNGwb-UYkQ"
+        title="Sky News Live"
+        loading="lazy"
+        referrerpolicy="origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen
+      ></iframe>
+    </div>
+
+    <div class="live-item">
+      <div class="live-header">CNN</div>
+      <iframe
+        class="live-frame"
+        data-channel-id="UCupvZG-5ko_eiXAupbDfxWw"
+        title="CNN Live"
+        loading="lazy"
+        referrerpolicy="origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen
+      ></iframe>
+    </div>
+  </div>
+
+  <script>
+    function uploadsPlaylistId(channelId) {
+      // Uploads playlist is "UU" + channelId without "UC"
+      if (!channelId || !channelId.startsWith("UC") || channelId.length < 3) return null;
+      return "UU" + channelId.slice(2);
+    }
+
+    function buildEmbedForVideo(videoId) {
+      const params = new URLSearchParams({
+        autoplay: "1",
+        mute: "1",
+        playsinline: "1",
+        rel: "0",
+      });
+      return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+    }
+
+    function buildEmbedForPlaylist(listId) {
+      const params = new URLSearchParams({
+        listType: "playlist",
+        list: listId,
+        autoplay: "1",
+        mute: "1",
+        playsinline: "1",
+        rel: "0",
+      });
+      return `https://www.youtube.com/embed?${params.toString()}`;
+    }
+
+    async function fetchLatestVideoIdFromRss(channelId) {
+      const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(channelId)}`;
+      const res = await fetch(rssUrl, { cache: "no-store" });
+      if (!res.ok) throw new Error(`RSS lỗi: ${res.status}`);
+      const xmlText = await res.text();
+      const doc = new DOMParser().parseFromString(xmlText, "application/xml");
+      const first = doc.querySelector("feed > entry > yt\\:videoId");
+      return first?.textContent?.trim() || null;
+    }
+
+    async function initLives() {
+      const frames = Array.from(document.querySelectorAll(".live-frame"));
+      for (const frame of frames) {
+        const channelId = frame.getAttribute("data-channel-id");
+        if (!channelId) continue;
+
+        try {
+          const latestVideoId = await fetchLatestVideoIdFromRss(channelId);
+          if (latestVideoId) {
+            frame.src = buildEmbedForVideo(latestVideoId);
+            continue;
+          }
+        } catch (e) {
+          // ignore and fallback to playlist
+        }
+
+        const listId = uploadsPlaylistId(channelId);
+        if (listId) frame.src = buildEmbedForPlaylist(listId);
+      }
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initLives);
+    } else {
+      initLives();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+# ── Môi trường & Bảo mật ──────────────────────────────────────────
+.env
+googles.env
+*.env.local
+
+# ── Dữ liệu tự sinh (không commit) ───────────────────────────────
+data.json
+src/data.json
+data/                    # ChromaDB persistent storage
+src/chatbot/tools/data/
+
+# ── Python ────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+.env/
+pip-wheel-metadata/
+
+# ── Jupyter ───────────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── macOS ─────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# ── IDE ───────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Claude Code ───────────────────────────────────────────────────
+.claude/
+
+# ── Logs ──────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Playwright ────────────────────────────────────────────────────
+playwright-report/
+test-results/
